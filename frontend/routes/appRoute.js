@@ -14,8 +14,9 @@ import UserContext from "../context/User";
 
 const AppRoute = ({ isSignedIn, contractId, wallet }) => {
   const user = { isSignedIn, wallet, contractId };
-
-  wallet.viewMethod({ contractId, method: "is_manufacturer", args: { account_id: wallet.account_id } }).then((res) => user.isManufacturer = res);
+  if (user.isSignedIn) {
+    wallet.viewMethod({ contractId, method: "is_manufacturer", args: { account_id: wallet.accountId } }).then((res) => { user.isManufacturer = res });
+  }
 
   return render(
     <BrowserRouter>
@@ -24,9 +25,9 @@ const AppRoute = ({ isSignedIn, contractId, wallet }) => {
           <Routes>
             <Route index path="/" element={<DashboardHome />} />
             <Route path="/verification" element={<VerificationHome />} />
-            <Route path="/information" element={<InformationHome />} />
-            <Route path="/information/step-2" element={<StepTwo />} />
-            <Route path="/information/product-details" element={<ProductDetailsHome />} />
+            <Route path="/information" element={<StepTwo />} />
+            {/* <Route path="/information/step-2" element={<StepTwo />} /> */}
+            <Route path="/information/product-details/:id" element={<ProductDetailsHome />} />
             <Route path="/manufacturer" element={<ManufacturerLogin />} />
             <Route path="/manufacturer/home" element={<Home />} />
           </Routes>

@@ -10,26 +10,31 @@ import { useContext, useEffect, useState } from "react";
 import DashboardIcon from "../../assets/icons/dashboard-icon.png";
 import CustomButton from "../../components/CustomButton/customButton";
 import AddItemModal from "../../components/Modal/addItemModal";
-import AddProdcutModal from "../../components/Modal/addProductModal";
+import AddProductModal from "../../components/Modal/addProductModal";
 import UserContext from "../../context/User";
-import { manProducts } from "../../utils/data";
 import LatestNews from "../LatestNews";
 
 const ManufacturerDashboardTemp = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: itemIsOpen, onOpen: itemOnOpen, onClose: itemOnClose } = useDisclosure();
   const [manufacturer, setManufacturer] = useState();
+  const [products, setProducts] = useState([]);
   const user = useContext(UserContext);
 
   const getManufacturer = async () => {
-    console.log(user.wallet.accountId);
     const res = await user.wallet.viewMethod({ contractId: user.contractId, method: "get_manufacturer", args: { account_id: user.wallet.accountId } });
-    return res;
+    setManufacturer(res);
+    const prdts = [];
+    for (let i = 0; i < res.products.length; i++) {
+      const r = await user.wallet.viewMethod({ contractId: user.contractId, method: "get_product", args: { name: res.products[i] } });
+      prdts.push(r);
+    }
+    console.log(prdts);
+    setProducts(prdts);
   }
 
   useEffect(() => {
-    console.log(user);
-    getManufacturer().then((res) => { console.log(res); setManufacturer(res) });
+    getManufacturer();
   }, []);
 
   return (
@@ -71,7 +76,7 @@ const ManufacturerDashboardTemp = () => {
             </CustomButton>
           </Flex>
           <SimpleGrid columns={3} gap="30px">
-            {manufacturer?.products.map((item, index) => (
+            {manufacturer?.products.map((p, index) => (
               <Flex
                 alignItems="center"
                 bg="#F3F6FB"
@@ -79,9 +84,9 @@ const ManufacturerDashboardTemp = () => {
                 borderRadius="8px"
                 key={index}
               >
-                <Box>{item.icon}</Box>
+                <Box>{p.icon}</Box>
                 <Text color="brand.dark" ml="10px">
-                  {item.name}
+                  {p}
                 </Text>
               </Flex>
             ))}
@@ -104,6 +109,20 @@ const ManufacturerDashboardTemp = () => {
               Create Items
             </CustomButton>
           </Flex>
+          {products.map((p, index) => (
+            <Flex
+              alignItems="center"
+              bg="#F3F6FB"
+              p="20px"
+              borderRadius="8px"
+              key={index}
+            >
+              <Box>{p.items?.length || 0}</Box>
+              <Text color="brand.dark" ml="10px">
+                {p.name}
+              </Text>
+            </Flex>
+          ))}
         </Box>
       </Box>
 
@@ -111,7 +130,7 @@ const ManufacturerDashboardTemp = () => {
         <LatestNews />
       </Box>
 
-      <AddProdcutModal
+      <AddProductModal
         isOpen={isOpen}
         onClose={onClose}
         header="Add Products "
@@ -122,7 +141,7 @@ const ManufacturerDashboardTemp = () => {
         isOpen={itemIsOpen}
         onClose={itemOnClose}
         header="Fill in Item Number"
-      // handleProceed={handleProceed}
+        products={manufacturer?.products}
       />
     </Flex>
   );
